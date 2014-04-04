@@ -39,7 +39,7 @@ class DeferredRequestCreator implements ViewTreeObserver.OnPreDrawListener {
 
   @Override public boolean onPreDraw() {
     ImageView target = this.target.get();
-    if (target == null) {
+    if (target == null || creator == null) {
       return true;
     }
     ViewTreeObserver vto = target.getViewTreeObserver();
@@ -47,8 +47,21 @@ class DeferredRequestCreator implements ViewTreeObserver.OnPreDrawListener {
       return true;
     }
 
-    int width = target.getMeasuredWidth();
-    int height = target.getMeasuredHeight();
+    int width = 0;
+    int height = 0;
+    if(creator.shouldMatchParentSize()){
+      ViewParent parent = target.getParent();
+      if(parent instanceof ViewGroup){
+        ViewGroup viewGroup = ((ViewGroup)parent);
+        width = viewGroup.getMeasuredWidth();
+        height = viewGroup.getMeasuredHeight();
+      }else{
+        creator.setMatchParent(false);
+      }   
+    }else{
+      width = target.getMeasuredWidth();
+      height = target.getMeasuredHeight();
+    }
 
     if (width <= 0 || height <= 0) {
       return true;

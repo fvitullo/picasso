@@ -42,6 +42,7 @@ public class RequestCreator {
   private boolean skipMemoryCache;
   private boolean noFade;
   private boolean deferred;
+  private boolean matchParentSize;
   private int placeholderResId;
   private int errorResId;
   private Drawable placeholderDrawable;
@@ -50,7 +51,7 @@ public class RequestCreator {
   RequestCreator(Picasso picasso, Uri uri, int resourceId) {
     if (picasso.shutdown) {
       throw new IllegalStateException(
-          "Picasso instance already shut down. Cannot submit new requests.");
+        "Picasso instance already shut down. Cannot submit new requests.");
     }
     this.picasso = picasso;
     this.data = new Request.Builder(uri, resourceId);
@@ -237,7 +238,7 @@ public class RequestCreator {
 
     Action action = new GetAction(picasso, finalData, skipMemoryCache, key);
     return forRequest(picasso.context, picasso, picasso.dispatcher, picasso.cache, picasso.stats,
-        action, picasso.dispatcher.downloader).hunt();
+      action, picasso.dispatcher.downloader).hunt();
   }
 
   /**
@@ -259,6 +260,19 @@ public class RequestCreator {
     }
   }
 
+  /** Target should match parent's size */
+  public RequestCreator matchParentSize(){
+    return setMatchParent(true);
+  }
+  
+  public RequestCreator setMatchParentSize(boolean matchParent){
+    this.matchParentSize = matchParentSize;
+    return this;
+  }
+
+  public boolean shouldMatchParentSize(){
+    return matchParentSize;
+  }
   /**
    * Asynchronously fulfills the request into the specified {@link Target}. In most cases, you
    * should use this when you are dealing with a custom {@link android.view.View View} or view
@@ -313,8 +327,8 @@ public class RequestCreator {
     }
 
     Drawable drawable =
-        placeholderResId != 0 ? picasso.context.getResources().getDrawable(placeholderResId)
-            : placeholderDrawable;
+    placeholderResId != 0 ? picasso.context.getResources().getDrawable(placeholderResId)
+    : placeholderDrawable;
 
     if (!data.hasImage()) {
       picasso.cancelRequest(target);
@@ -337,7 +351,7 @@ public class RequestCreator {
     target.onPrepareLoad(drawable);
 
     Action action = new TargetAction(picasso, target, finalData, skipMemoryCache, errorResId,
-        errorDrawable, requestKey);
+      errorDrawable, requestKey);
     picasso.enqueueAndSubmit(action);
   }
 
@@ -346,7 +360,7 @@ public class RequestCreator {
    * given {@code viewId}. This is used for loading bitmaps into a {@link Notification}.
    */
   public void into(RemoteViews remoteViews, int viewId, int notificationId,
-      Notification notification) {
+    Notification notification) {
     if (remoteViews == null) {
       throw new IllegalArgumentException("RemoteViews must not be null.");
     }
@@ -358,15 +372,15 @@ public class RequestCreator {
     }
     if (placeholderDrawable != null || errorDrawable != null) {
       throw new IllegalArgumentException(
-          "Cannot use placeholder or error drawables with remote views.");
+        "Cannot use placeholder or error drawables with remote views.");
     }
 
     Request finalData = picasso.transformRequest(data.build());
     String key = createKey(finalData);
 
     RemoteViewsAction action =
-        new NotificationAction(picasso, finalData, remoteViews, viewId, notificationId,
-            notification, skipMemoryCache, errorResId, key);
+    new NotificationAction(picasso, finalData, remoteViews, viewId, notificationId,
+      notification, skipMemoryCache, errorResId, key);
 
     performRemoteViewInto(action);
   }
@@ -387,15 +401,15 @@ public class RequestCreator {
     }
     if (placeholderDrawable != null || errorDrawable != null) {
       throw new IllegalArgumentException(
-          "Cannot use placeholder or error drawables with remote views.");
+        "Cannot use placeholder or error drawables with remote views.");
     }
 
     Request finalData = picasso.transformRequest(data.build());
     String key = createKey(finalData);
 
     RemoteViewsAction action =
-        new AppWidgetAction(picasso, finalData, remoteViews, viewId, appWidgetIds, skipMemoryCache,
-            errorResId, key);
+    new AppWidgetAction(picasso, finalData, remoteViews, viewId, appWidgetIds, skipMemoryCache,
+      errorResId, key);
 
     performRemoteViewInto(action);
   }
@@ -434,14 +448,30 @@ public class RequestCreator {
       if (data.hasSize()) {
         throw new IllegalStateException("Fit cannot be used with resize.");
       }
-      int measuredWidth = target.getMeasuredWidth();
-      int measuredHeight = target.getMeasuredHeight();
+       int measuredWidth = 0;
+      int measuredHeight = 0;
+      if(shouldMatchParentSize()){
+        ViewParent parent = target.getParent();
+        if(parent instanceof ViewGroup){
+          ViewGroup viewGroup = ((ViewGroup)parent);
+          measuredWidth = viewGroup.getMeasuredWidth();
+              measuredHeight = viewGroup.getMeasuredHeight();
+        }else{
+          setMatchParent(true);
+        }   
+      }else{
+        measuredWidth = target.getMeasuredWidth();
+          measuredHeight = target.getMeasuredHeight();
+      }
+      
+      
       if (measuredWidth == 0 || measuredHeight == 0) {
         PicassoDrawable.setPlaceholder(target, placeholderResId, placeholderDrawable);
         picasso.defer(target, new DeferredRequestCreator(this, target, callback));
         return;
       }
-      data.resize(measuredWidth, measuredHeight);
+    
+      data.resize(measuredWidth, measuredWidth);
     }
 
     Request finalData = picasso.transformRequest(data.build());
@@ -452,7 +482,7 @@ public class RequestCreator {
       if (bitmap != null) {
         picasso.cancelRequest(target);
         PicassoDrawable.setBitmap(target, picasso.context, bitmap, MEMORY, noFade,
-            picasso.indicatorsEnabled);
+          picasso.indicatorsEnabled);
         if (callback != null) {
           callback.onSuccess();
         }
@@ -463,8 +493,8 @@ public class RequestCreator {
     PicassoDrawable.setPlaceholder(target, placeholderResId, placeholderDrawable);
 
     Action action =
-        new ImageViewAction(picasso, target, finalData, skipMemoryCache, noFade, errorResId,
-            errorDrawable, requestKey, callback);
+    new ImageViewAction(picasso, target, finalData, skipMemoryCache, noFade, errorResId,
+      errorDrawable, requestKey, callback);
 
     picasso.enqueueAndSubmit(action);
   }
