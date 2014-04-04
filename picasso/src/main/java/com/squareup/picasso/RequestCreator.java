@@ -448,20 +448,20 @@ public class RequestCreator {
       if (data.hasSize()) {
         throw new IllegalStateException("Fit cannot be used with resize.");
       }
-       int measuredWidth = 0;
+      int measuredWidth = 0;
       int measuredHeight = 0;
       if(shouldMatchParentSize()){
         ViewParent parent = target.getParent();
         if(parent instanceof ViewGroup){
           ViewGroup viewGroup = ((ViewGroup)parent);
           measuredWidth = viewGroup.getMeasuredWidth();
-              measuredHeight = viewGroup.getMeasuredHeight();
+          measuredHeight = viewGroup.getMeasuredHeight();
         }else{
           setMatchParent(true);
         }   
       }else{
         measuredWidth = target.getMeasuredWidth();
-          measuredHeight = target.getMeasuredHeight();
+        measuredHeight = target.getMeasuredHeight();
       }
       
       
@@ -471,7 +471,7 @@ public class RequestCreator {
         return;
       }
     
-      data.resize(measuredWidth, measuredWidth);
+      data.resize(measuredWidth, measuredHeight);
     }
 
     Request finalData = picasso.transformRequest(data.build());
