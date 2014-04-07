@@ -51,7 +51,7 @@ class DeferredRequestCreator implements ViewTreeObserver.OnPreDrawListener {
     int height = 0;
     if(creator.shouldMatchParentSize()){
       ViewParent parent = target.getParent();
-      if(parent instanceof ViewGroup){
+      if(parent != null && parent instanceof ViewGroup){
         ViewGroup viewGroup = ((ViewGroup)parent);
         width = viewGroup.getMeasuredWidth();
         height = viewGroup.getMeasuredHeight();
