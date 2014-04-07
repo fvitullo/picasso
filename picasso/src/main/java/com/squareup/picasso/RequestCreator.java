@@ -452,12 +452,12 @@ public class RequestCreator {
       int measuredHeight = 0;
       if(shouldMatchParentSize()){
         ViewParent parent = target.getParent();
-        if(parent instanceof ViewGroup){
+        if(parent != null && parent instanceof ViewGroup){
           ViewGroup viewGroup = ((ViewGroup)parent);
           measuredWidth = viewGroup.getMeasuredWidth();
           measuredHeight = viewGroup.getMeasuredHeight();
         }else{
-          setMatchParent(true);
+          setMatchParent(false);
         }   
       }else{
         measuredWidth = target.getMeasuredWidth();
